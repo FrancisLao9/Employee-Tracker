@@ -1,29 +1,28 @@
 const inquirer = require("inquirer");
-const mysql = require('mysql2');
-const { allowedNodeEnvironmentFlags } = require("process");
-const PORT = process.env.PORT || 3001;
+const db = require('./root');
 
-function viewDepartments() {
+
+async function viewDepartments() {
     let query = "SELECT * FROM department";
-    db.query(query, function(err, res){
+    db.query(query, function(err, res) {
         if (err) throw err;
         console.table(res);
         menu();
     })
 };
 
-function viewRoles() {
+async function viewRoles() {
     let query = "SELECT * FROM roles";
-    db.query(query, function(err, res){
+    db.query(query, function(err, res) {
         if (err) throw err;
         console.table(res);
         menu();
     })
 };
 
-function viewEmployees() {
+async function viewEmployees() {
     let query = "SELECT * FROM employee";
-    db.query(query, function(err, res){
+    db.query(query, function(err, res) {
         if (err) throw err;
         console.table(res);
         menu();
@@ -38,7 +37,7 @@ function addDepartment() {
             name: "dep_name"
         },
     ]).then(function(answer){
-        db.query("INSERT INTO department (name) VALUES (?)", [answer.dep_name], function(err, res){
+        db.query("INSERT INTO department (dep_name) VALUES (?)", [answer.dep_name], function(err, res){
             if (err) throw err;
             console.table(res);
             menu();
@@ -101,7 +100,7 @@ function addEmployee() {
             first_name: answer.first_name,
             last_name: answer.last_name,
             role_id: answer.role_id,
-            manager_id: answer.manager_id
+            manager_id: answer.manager_id,
         }, function(err, res){
             if (err) throw err;
             console.table(res);
@@ -138,7 +137,7 @@ function updateEmployeeManager() {
             message: "Enter manager to update:",
             name: "empUpdate"
         },
-        { //Update Role
+        {
             type: "input",
             message: "Update To:",
             name: "updateRole"
@@ -153,22 +152,58 @@ function updateEmployeeManager() {
     })
 };
 
-// function viewEmployeeByManager() {
-//     let query = "SELECT * FROM employee WHERE"
-// };
+function deleteDepartment() {
+    inquirer.prompt([
+        {
+            type: "input",
+            message: "Enter Department to Delete:",
+            name: "depDel"
+        }
+    ]).then(function(answer) {
+        db.query
+        ('DELETE FROM department WHERE dep_name=?',[answer.depDel],function(err, res){
+            if (err) throw err;
+            console.table(res);
+            menu();
+        })
+    })
+};
 
-// function viewEmployeeByDepartment() {
-
-// };
-
-// deleteDepartment
-// deleteRole
-// deleteEmployee
+function deleteRole() {
+    inquirer.prompt([
+        {
+            type: "input",
+            message: "Enter Role to Delete:",
+            name: "depRole"
+        }
+    ]).then(function(answer) {
+        db.query
+        ('DELETE FROM roles WHERE title=?',[answer.depRole],function(err, res){
+            if (err) throw err;
+            console.table(res);
+            menu();
+        })
+    })
+}
+function deleteEmployee() {
+    inquirer.prompt([
+        {
+            type: "input",
+            message: "Enter Employee ID to Delete:",
+            name: "empID"
+        }
+    ]).then(function(answer) {
+        db.query
+        ('DELETE FROM employee WHERE id=?',[answer.empID],function(err, res){
+            if (err) throw err;
+            console.table(res);
+            menu();
+        })
+    })
+}
 
 function menu() {
-    const selection = () => {
-        return inquirer
-            .prompt([
+        return inquirer.prompt([
                 {
                     type: 'list',
                     name: 'menu',
@@ -182,76 +217,71 @@ function menu() {
                         "Add Employee",
                         "Update Employee Role",
                         "Update Employee Manager(s)",
-                        // "View Employees by Manager",
-                        // "View Employees by Department",
-                        // "Delete Department",
-                        // "Delete Role",
-                        // "Delete Employee",
+                        "Delete Department",
+                        "Delete Role",
+                        "Delete Employee",
                         "Exit"
                     ]
                 }
-            ]) .then((data) => {
-                console.log(data.menu);
+            ]).then((data) => {
                 switch (data.menu) {
                     case "All Departments":
                         viewDepartments();
-                        menu();
                         break;
                     case "All Roles":
                         viewRoles();
-                        menu();
                         break;
                     case "All Employees":
                         viewEmployees();
-                        menu();
                         break;
                     case "Add Department":
                         addDepartment();
-                        menu();
                         break;
                     case "Add Role":
                         addRole();
-                        menu();
                         break;
                     case "Add Employee":
                         addEmployee();
-                        menu();
                         break;
                     case "Update Employee Role":
                         updateEmployeeRole();
-                        menu();
                         break;
                     case "Update Employee Manager(s)":
                         updateEmployeeManager();
-                        menu();
                         break;
                     case "View Employees by Manager":
                         viewEmployeeByManager();
-                        menu();
                         break;
                     case "View Employees by Department":
                         viewEmployeeByDepartment();
-                        menu();
                         break;
                     case "Delete Department":
                         deleteDepartment();
-                        menu();
                         break;
                     case "Delete Role":
                         deleteRole();
-                        menu();
                         break;
                     case "Delete Employee":
                         deleteEmployee();
-                        menu();
                         break;
                     case "Exit":
                         db.end();
                         break;
-                    default:
-                        console.log("~~~~~~~~~~~~~~~");
-                        break;
                 }
-            })
-    }
-}
+            });
+    };
+
+module.exports = {
+    viewDepartments,
+    viewRoles,
+    viewEmployees,
+    addDepartment,
+    addRole,
+    addEmployee,
+    updateEmployeeRole,
+    updateEmployeeManager,
+    deleteDepartment,
+    deleteRole,
+    deleteEmployee,
+    menu
+};
